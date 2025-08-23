@@ -1,3 +1,5 @@
+ALTERACAO BRANCH FEAT1
+
 aws_set_credentials.sh
 ======================
 #!/bin/bash
