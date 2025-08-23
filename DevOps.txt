@@ -1,0 +1,909 @@
+AWS
+===
+Account ID / ALIAS = luciano-tcb
+tcb-admin
+luknew02*
+
+tcb-admin1
+Etelvino25*
+
+==================================================================================================
+
+## SSH
+
+CRIAÇÃO CHAVE
+=============
+ssh-keygen -f <chave>
+ssh-keygen -t rsa -f ~/.ssh/vm-ssh-key -C YOUR-USERNAME
+
+Se obter um erro de chave com permissão muito aberta:
+
+* Usuários WINDOWS, execute esses comandos:
+icacls vscode-key.pem /inheritance:r
+icacls vscode-key.pem /grant:r "%username%":"(R)"
+
+* Validar Permissões do Arquivo:
+icacls vscode-key.pem
+
+* Remover Usuário que esteja com acesso ao Arquivo:
+icacls vscode-key.pem /remove Everyone
+
+IdentityFile c:\Luk\TCB\lab\vscode-key.pem
+
+* Usuários LINUX/MACOS, execute esses comandos para validar e alterar as permissões:
+ls -l vscode-key.pem
+chmod 400 vscode-key.pem
+ls -l vscode-key.pem
+
+==========================
+
+ssh -i ssh-aws-bootcamp.pem ec2-user@ec2-public-ip
+
+## ESCANEIA CHAVE SSH E INSERE
+provisioner "local-exec" {
+	  command = "sleep 30; ssh-keyscan ${self.private_ip} >> ~/.ssh/known_hosts"
+	}
+
+=============================================================================================================
+## TERRAFORM
+============
+
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum -y install terraform
+
+terraform init
+terraform plan
+terraform apply
+terraform plan -out=<ARQUIVO> - CRIA ARQUIVO BINÁRIO COMO PLANO DE EXECUÇÃO
+terraform show <FILE-PLANNED-NAME>
+terraform fmt  --> Formata todos os arquivos .tf
+terraform validade --> Valida as confs dos arquivos .tf
+terraform plan
+terraform apply -auto-approve
+terraform output
+terraform console
+terraform destroy -auto-approve
+
+
+## REGISTRY TERRAFOR
+http://https://registry.terraform.io/ 
+
+REGISTRY TERRAFORM EC2 --> aws_instance
+
+terraform.tf 
+main.tf
+resources.tf
+
+## COMENTÁRIOS NO TERRAFORM ---> /* (inicia linha comentário)
+				 */ (termina linha comentário)
+
+## VARIAVEIS
+** Arquivo variables.tf
+variable "application" {
+  default = "HumanGov"
+}
+
+variable "projectid" {
+  default = "HGV20392"
+}
+
+
+
+
+
+
+## variables.tf
+export TF_VAR_<nome_da_variavel>=<variavel>
+terraform plan -var="variavel=valor" -var="variavel=valor"
+terraform.tfvars 
+-var-file=<arquivo.tfvars> ---> terraform plan -var-file=testing.tfvars
+
+## outputs.tf
+output "bucket_name" {
+  value = "The bucket name is ${aws_s3_bucket.example1.bucket}"
+}
+
+DEPENDENCIA EXPLICITA (Associação por COLCHETES)
+
+resource "google_compute_instance" "linux-vm" {
+  name		= "gce-ubuntu"
+  machine_type	= "e2-micro"
+  zone		= "us-central1-f"
+  depends_on = [ google_storage_bucket.tcb_bucket ]
+}
+
+resource "google_storage_bucket" "tcb_bucket"
+  name		= "tcb_bucket_unique_name"
+  location	= "us-central1-f"
+}
+
+## LOG
+export TF_LOG=TRACE --> faz "verbose" no terraform init, exibe infos na tela
+export TF_LOG_PATH=terraform.log --> cria arquivo de log
+
+## VARIAVEIS
+============
+arquivo variables.tf
+variable "special" {
+    default = "#"
+}
+
+
+## MODULE
+=========
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "ec2_instances" {
+  source          = "./modules/ec2_instance"
+  ami_id          = "ami-007855ac798b5175e" # Amazon Linux 2 AMI
+  instance_count  = 10
+  instance_name   = "webserver"
+  instance_type   = "t2.micro"
+}
+
+output "instance_ids" {
+  value = module.ec2_instances.instance_ids
+}
+
+output "public_ips" {
+  value = module.ec2_instances.public_ips
+}
+
+TRABALHO REMOTO
+===============
+## Arquivo --> backend.tf
+terraform {
+  backend "s3" {
+    bucket         = "tcb-devops-state-demo-x922x"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "tcb-devops-state-lock-table"
+  }
+}
+
+========================================================================================================
+## GIT / GITHUB 
+User: lodavid25
+Pass: AnoNovo25#
+
+<home_dir>/.git/objects
+ls .git/objects/<meio>
+git cat-file -p 
+
+# MUDA BRANCH
+git branch -m main
+
+git log --oneline
+
+git cat-file 
+
+git checkout <branch/hash-log>
+
+git merge <branch>
+
+Quick setup — if you’ve done this kind of thing before
+or	
+https://github.com/lodavid25/view.git
+Get started by creating a new file or uploading an existing file. We recommend every repository include a README, LICENSE, and .gitignore.
+
+…or create a new repository on the command line
+echo "# view" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/lodavid25/view.git
+git push -u origin main
+…or push an existing repository from the command line
+git remote add origin https://github.com/lodavid25/view.git
+git branch -M main
+git push -u origin main
+
+git clone https://github.com/lodavid25/human-gov-infrastructure.git
+
+git config --global user.name "Your Name - DevOps Engineer"
+
+git config --global user.email youremail@humangov.com
+
+git config --global credential.helper store
+
+git revert <hash>
+
+###################################
+cd ~/environment/human-gov-application/src
+git status
+git add -A
+git commit -m "added k8s manifests"
+git push
+###################################
+=======================================================================================================
+## ANSIBLE
+==========
+
+sudo yum-config-manager --enable epel
+sudo yum install ansible -y
+
+# Check Python and PIP version on control node (Cloud9). Python must be present across all nodes.
+python3 --version
+pip3 --version
+ansible --version
+
+# Update the OS and install Python and PIP if needed
+sudo yum update -y
+sudo yum install python
+sudo yum install pip
+
+# Install Ansible
+python3 -m pip install --user ansible
+ansible --version
+
+ansible.cfg --> /etc/ansible/ansible.cfg
+LOCAL PADRÃO ROLES --> /etc/ansible/roles
+LOCAL PADRÃO HOSTS --> /etc/ansible/hosts
+
+ansible -i hosts all -m ping
+
+ansible -i hosts all -m ping -e "ansible_ssh_private_key_file=tcb-ansible-key.pem"
+
+ansible -i hosts all -m ping -u <user>
+
+ansible all -m command -a "date"
+
+ansible host01 -m apt -a "name=apache2 state=latest" -b
+
+ansible host01 -m apt -a "update_cache=yes" -become
+
+ansible host01 -m shell -a "systemctl status apache2"
+
+ansible host01 -m service -a "name=apache2 state=started"
+
+ansible all -m copy -a "src=teste.txt dest=/tmp"
+
+ansible host01 -m gather_facts
+
+## Exemplos de ‘facts’ / ‘ansible variables’:
+
+ansible_hostname
+ansible_fqdn
+ansible_pkg_mgr
+ansible_nodename
+discovered_interpreter_python
+ansible_os_family
+
+ansible host01 -m setup
+
+ansible host01 -m setup -a "filter=ansible_distribution"
+
+ansible host01 -m setup -a "filter=ansible_python_version"
+
+ansible-playbook <nome-playbook>.yml
+ansible-playbook exemplo.yml
+
+# EXEMPLO PLAYBOOK
+- name: Installing & starting ngnix
+  hosts: all
+  become: yes
+  tasks:
+    - name: Installing ngnix
+      yum:
+		    update_cache: yes
+        name: nginx
+        state: latest
+
+    - name: Starting nginx
+      shell: systemctl start nginx
+
+    - name: Enable the NGINX service during boot process
+      service:
+        name: nginx
+        enabled: yes
+	 
+## MÓDULO DEBUG E VARIÁVEIS
+- name: Example Playbook
+  hosts: localhost
+  vars:
+    http_port: 80
+    https_port: 443
+
+    packages:
+      - git
+      - mysql-client
+      - curl
+      - wget
+
+    appserver:
+      hostname: webapp01
+      ipaddress: 192.168.1.202
+      os: Windows Server 2019
+
+  tasks:
+    - name: Display the single variable
+      debug:
+        var: http_port, https_port
+
+    - name: Display the list variable
+      debug:
+        var: packages
+
+    - name: Display the dictionary variable
+      debug:
+        var: appserver
+
+## ESCANEIA CHAVE SSH E INSERE
+provisioner "local-exec" {
+	  command = "sleep 30; ssh-keyscan ${self.private_ip} >> ~/.ssh/known_hosts"
+	}
+
+## CONDITIONS
+- name: Installing Apache
+  hosts: all
+  become: yes
+  tasks:
+    - name: Setup Apache - Debian
+      apt:
+        update_cache: yes
+        name: apache2
+        state: present
+      when: ansible_distribution == 'Debian'
+
+    - name: Setup Apache - RHEL
+      yum:
+        name: httpd
+        state: present
+      when: ansible_distribution == 'RedHat'
+
+## LOOP
+- hosts: all
+  tasks:
+    - name: Creating Folder
+      file:
+        path: /home/{{ ansible_user }}/{{ item }}
+        state: directory
+      with_items:
+        - folder01
+        - folder02
+        - folder03
+
+- hosts: localhost
+  tasks:
+    - name: Creating Folder
+      file:
+        path: /home/{{ ansible_user }}/{{ item }}
+        state: directory
+      loop:
+        - folder01
+        - folder02
+        - folder03
+
+    - name: Creating files
+      file:
+        path: /home/{{ ansible_user }}/{{ item.dir }}/{{ item.file }}
+        state: touch
+      with_items:
+        - { dir: "folder01", file: "file01"}
+        - { dir: "folder02", file: "file02"}
+        - { dir: "folder03", file: "file03"}
+
+## ROLES
+- CRIA ROLE DIRS ROLES/WEBSERVER + ESTRUTURA DIRS
+ansible-galaxy role init roles/webserver
+
+[ec2-user@ip-172-31-28-236 webserver]$ pwd
+/home/ec2-user/ansible-tasks/roles/webserver
+[ec2-user@ip-172-31-28-236 webserver]$ ls -l
+total 4
+-rw-rw-r--. 1 ec2-user ec2-user 1328 Apr  9 22:13 README.md
+drwxrwxr-x. 2 ec2-user ec2-user   22 Apr  9 22:13 defaults 
+drwxrwxr-x. 2 ec2-user ec2-user    6 Apr  9 22:13 files    --> Arquivos a serem copiados;
+drwxrwxr-x. 2 ec2-user ec2-user   22 Apr  9 22:13 handlers --> Executa ações após criação requisitos;
+drwxrwxr-x. 2 ec2-user ec2-user   22 Apr  9 22:13 meta
+drwxrwxr-x. 2 ec2-user ec2-user   22 Apr  9 22:13 tasks    --> Lista de execuções
+drwxrwxr-x. 2 ec2-user ec2-user    6 Apr  9 22:13 templates -> Arquivos jinja (index.html.js)
+drwxrwxr-x. 2 ec2-user ec2-user   39 Apr  9 22:13 tests
+drwxrwxr-x. 2 ec2-user ec2-user   22 Apr  9 22:13 vars
+
+======================================================================================================================
+## DOCKER
+=========
+
+luciano_david@uol.com.br
+Etelvino2025*
+
+ocir.io
+gcr.io
+dkr.ecr
+azurecr.io
+
+####			 ARQUIVO DOCKERFILE 		####
+======================================================================================
+# Utilize o Python como imagem base
+FROM python:3.8-slim-buster
+
+# Configure o diretório de trabalho
+WORKDIR /app
+
+# Copie os requisitos e instale as dependências
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copie a aplicação Flask
+COPY . /app
+
+# Inicie o Gunicorn
+CMD ["gunicorn", "--workers", "1", "--bind", "0.0.0.0:8000", "humangov:app"]
+=====================================================================================
+# Utilize o NGINX alpine como imagem base
+FROM nginx:alpine
+
+# Remova o arquivo de configuração padrão do NGINX
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copie o arquivo de configuração personalizado
+COPY nginx.conf /etc/nginx/conf.d
+
+# Copie os parâmetros de proxy
+COPY proxy_params /etc/nginx/proxy_params
+
+# Exponha a porta 80
+EXPOSE 80
+
+# Inicie o NGINX
+CMD ["nginx", "-g", "daemon off;"]
+=====================================================================================
+
+sudo docker run hello-world
+
+docker info
+
+docker run image --> Cria + inicia um container
+
+docker tag <ID_IMAGEM> <USER-ID-DOCKER/IMAGEM:TAG>
+docker tag f236055853d9 lodavid/python-simple-httpserver:v2.0
+
+docker push <USER-ID-DOCKER/IMAGEM:TAG>
+docker push lodavid/python-simple-httpserver:v2.0
+
+docker pull <image> --> baixa imagem
+
+docker ps --> lista containers running
+
+docker ps -a --> lista TODOS os containers
+
+docker ps -f status=exited --> filtra containers pelo status
+
+docker stop <container_id> ou <container_name>
+
+docker rm <container_id> 
+
+docker kill 
+
+docker images --> lista imagens disponíveis (local)
+
+docker rmi <image_id> --> remove imagem
+
+
+# CRIA CONTAINER
+# docker create --name <container_name> <image>
+docker create --name my-nginx nginx
+
+# INICIA CONTAINER
+docker start my-nginx
+
+docker ps -f status=exited
+
+docker rm <container>
+
+docker run -it --name interactive-nginx nginx /bin/bash - Cria container, executa e cai dento do container
+docker run -itd --name my-ubuntu1 ubuntu bash
+
+docker run -d --name detached-nginx nginx --> fica em execução em background
+
+docker run -d --name my-ctr httpd:alpine3.15 --> imagem com tag
+
+docker run -d -p <hostPort:containerPort> -name container-name image:tag
+docker run -d -p 3000:80 --name my-ctr nginx:mainline-alpine
+
+docker run --rm -d -p 8080:3000 --name httpserver1 python-simple-httpserver:v1.0
+
+docker exec <container_id> <comandos>- executa comandos dentro do container
+
+docker exec my-ubuntu1 ping my-ubuntu2
+
+docker exec -it my-ubuntu1 bash
+
+docker inspect <container_id> or <container_name> --> todas as infos do container
+
+docker logs <container_id> --> LOGS
+
+docker attach <container_id> --> exibe log dinamicamente
+
+## CHEAT SHEET
+https://dockerlabs.collabnix.com/docker/cheatsheet/
+
+## TAGS
+docker run ubuntu:18.04
+docker run ubuntu:22.04
+
+docker build -t <DOCKER-HUB-USER>/image-name:tag
+
+docker build . -t python-simple-httpserver:v1.0
+
+docker tag <ID_IMAGE> <USER_DOCKER_HUB>/<IMAGEM:TAG:>
+
+docker tag 62241296e9f5 lodavid/python-simple-httpserver:v2.0
+
+docker push lodavid/python-simple-httpserver:v2.0
+
+docker push
+
+docker pull
+
+docker system prune -a -f --volumes --> Limpa TUDO
+
+docker top
+
+docker stats
+
+docker volume create
+
+docker volume ls
+
+docker volume inspect 
+
+docker volume create <VOLUME_NAME>
+
+docker volume rm 
+
+docker volume prune
+
+## STORAGE
+##########
+
+# VOLUME CREATE
+docker volume create <NOME_VOLUME> --> Docker cria no dir /var/lib/docker/volumes
+
+docker volume create upload-files
+
+docker volume ls
+
+docker run --rm -d -p 8081:3000 --name ctr-upload-file -v upload-files:/app/uploads tcb-img-upload-file:v1.0
+
+ls -l /var/lib/docker/volumes
+
+# VOLUME BIND
+docker run --rm -d -p 8081:3000 --name ctr-upload-file -v <HOST-PATH>:<DIR-CONTAINER> <IMAGE>
+
+docker run --rm -d -p 8081:3000 --name ctr-upload-file -v /home/ubuntu/docker-volumes/handsontask/volumes/bkp-upload:/app/uploads tcb-img-upload-file:v1.0
+
+## REDES
+
+- utilitário teste --> sudo apt install bridge-utils
+  brctl show
+  
+docker network ls
+
+docker network inspect bridge
+
+docker network create devops-net
+
+docker network create bu1-net
+
+docker run -itd --name bu1-linux --net bu1-net ubuntu bash
+
+docker network create -d macvlan my-mac-net
+
+docker run -d --name my-ctr --net devops-net redis
+
+docker inspect my-ctr
+
+docker network disconnect devops-net my-ctr
+
+docker network rm my-mac-net devops-net
+
+apt install bridge-utils --> utilitário redes
+apt update
+apt install iproute2 -y --> +- = ipconfig
+apt install iputils-ping -y --> ping
+
+brctl show - exibe redes 
+
+docker network rm bu1-net bu2-net
+
+docker network disconnect <REDE> <CONTAINER>
+docker network disconnect bu1-net bu1-linux - Disconecta container da rede
+
+DOCKER COMPOSE - yaml
+==============
+
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+
+docker compose version
+
+docker compose up --> Inicia o compose
+
+docker compose up -d
+
+docker compose down 
+docker compose down -v --> Remove tudo, inclusive volumes
+
+docker compose ps
+
+docker compose stop
+
+docker compose start
+
+docker compose pause
+
+docker compose unpause
+
+docker compose logs
+
+## EXEMPLO docker compose
+version: '3'
+services: #--> CONTAINERS
+  ctr-db:  #--> BANCO DE DADOS
+    image: mysql:5.7
+    volumes:
+      - db-vol:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: devopscloudbootcamp
+      MYSQL_PASSWORD: devopscloudbootcamp
+    networks:
+      - wp-net
+    restart: always
+
+  ctr-wp: 
+    image: wordpress:latest
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: ctr-db:3306
+      WORDPRESS_DB_USER: devopscloudbootcamp
+      WORDPRESS_DB_PASSWORD: devopscloudbootcamp
+      WORDPRESS_DB_NAME: wordpress
+    networks:
+      - wp-net
+    restart: always
+    depends_on:
+      - ctr-db
+
+  crt-py-upload-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:3000"
+    volumes:
+      - upload-files:/app/uploads
+    restart: always
+
+volumes:
+  db-vol: {}
+  upload-files: {}
+networks:
+  wp-net: {}
+
+==========================================================================
+KUBERNETES
+==========
+
+# Validação script yaml
+http://www.yamllint.com
+http://jsonformatter.org/yaml-validator
+
+## ABORDAGENS
+=============
+EXECUÇÃO IMPERATIVA  - Interage diretamento no cluster (comandos)
+EXECUÇÃO DECLARATIVA - Define estado desejado (yaml)
+
+kubectl run my-pod --image=nginx
+
+kubectl describe pod my-pod
+
+kubectl get pods -o wide
+
+kubectl apply -f <my-pod.yaml>
+
+kubectl delete pod <pod>
+
+kubectl apply -f replicaset.yaml
+
+kubectl get replicaset
+
+kubectl scale replicaset my-replicaset --replicas=6
+kubectl scale replicaset my-replicaset --replicas=2
+
+kubectl autoscale rs my-replicaset --min=3 --max=10 --cpu-percent=70
+
+kubectl get hpa
+
+kubectl delete -f replicaset.yaml
+
+kubectl delete hpa my-replicaset
+
+kubectl get deployment
+
+kubectl describe deployment
+
+kubectl get all
+
+kubectl rollout status deployment my-deployment
+kubectl rollout history deployment my-deployment 
+kubectl rollout history deployment my-deployment --revision=<número_da_revisão>
+kubectl rollout undo deployment my-deployment
+kubectl delete -f deployment.yaml
+
+## NETWORK
+==========
+ClusterIP - Serviço de comunicação interna do cluster
+NodePort  - Serviço para comunicação externa ao cluster
+Load Balancer - 
+
+
+kubectl get svc
+
+CONTAINER TESTE --> busybox (imagem Docker)
+
+kubectl run nginx-pod --image=nginx --labels="app=nginx"
+kubectl expose pod nginx-pod --name=nginx-clusterip --port=80 --target-port=80
+
+## INGRESS CONTROLLER
+=====================
+
+NGINX
+
+## STORAGE
+
+## CRIAÇÃO CLUSTER AWS - EKS
+
+eksctl create cluster --name humangov-cluster --region us-east-1 --nodegroup-name standard-workers --node-type t3.medium --nodes 1
+
+## ARQUIVO KUBECONFIG
+aws eks update-kubeconfig --name humangov-cluster
+
+DOWNLOADS:
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/heads/main/docs/install/iam_policy.json
+
+## CRIA POLITICA IAM 
+aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://iam_policy.json
+
+## CRIAÇÃO PROVEDOR IDENTIDADE IAM OIDC PARA O CLUSTER
+eksctl utils associate-iam-oidc-provider --cluster humangov-cluster --aprove
+
+## CRIAÇÃO CONTA SERVIÇO KUBERNETES + ROLE IAM AWS (POLITICA)
+eksctl create iamserviceaccount \
+  --cluster=humangov-cluster \
+  --namespace=kube-system \
+  --name=aws-load-balancer-controller \
+  --role-name AmazonEKSLoadBalancerControllerRole \
+  --attach-policy-arn=arn:aws:iam::597088030753:policy/AWSLoadBalancerControllerIAMPolicy \
+  --aprove
+
+## ADICIONA REPOSITÓRIO HELM
+helm repo add eks https://aws.github.io/eks-charts
+
+## ATUALIZA REPOSITÓRIO
+helm repo update eks
+
+## INSTALAÇÃO HELM
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=humangov-cluster \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+
+## CRIAÇÃO ROLE E SERVICE ACCOUNT PARA ACESSO DOS PODS AO DINAMODB E S3
+eksctl create iamserviceaccount \
+  --cluster=humangov-cluster \
+  --name=humangov-pod-execution-role \
+  --role-name HumanGovPodExecutionRole \
+  --attach-policy-arn=arn:aws:iam::aws:policy/AmazonS3FullAccess \
+  --attach-policy-arn=arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess \
+  --region us-east-1 \
+  --aprove
+
+=========================================================================================
+# JENKINS
+=========
+
+stage('Implantando Aplicação') {
+            steps {
+                sh '''
+                docker stop webapp_ctr
+                docker run --rm -d -p 3000:3000 --name webapp_ctr webapp:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+---------------------------------------------------------------------------------
+
+COMENTÁRIO LINHA --> //
+COMENTÁRIO BLOCO --> Inicia /* e finaliza */
+
+=========================================================================================
+
+# MONITORAMENTO, LOGGING E OBSERVABILIDADE
+==========================================
+
+MONITORING MULTICLOUD : Monitora recursos em nuvem (VMs, containers, funções serverless)
+	   DEVOPS     : Feedback desempenho aplicação e saúde infraestrutura
+LOGGING    MULTICLOUD : Registra eventos e problemas dos ambientes em nuvem
+	   DEVOPS     : Análise do fluxo de dados e eventos para solução de problemas
+OBSERVABILIDADE MULTICLOUD : Fornece visão geral de toda a pilha de aplicativos, independente do fornecedor de nuvem
+OBSERVABILIDADE DEVOPS     : Principio central do DevOps, permite insights sobre o comportamento do sistema, possibilitando decisões para melhoria contínua.
+
+# OS TRES PILARES DA OBSERVABILIDADE
+====================================
+
+MÉTRICAS : AWS CloudWatch, Prometheus, Grafana, Datadog;
+LOGS     : AWS CloudWatch Logs, Elasticsearch, Splunk;
+TRACES   : AWS X-Ray, Jaeger, Zipkin, OpenTelemetry;
+
+# CLOUDWATCH - Observabilidade recursos
+# X-RAY - Traces aplicações
+
+aws configure list
+
+aws s3 list
+
+# TEMPLATE CRIAÇÃO INSTÂNCIAS
+=============================
+aws ec2 run-instances \
+  --image-id ami-xxxxxxxxx \
+  --instance-type t2.micro \
+  --key-name cw-ssh-key \
+  --security-group-ids sg-xxxxxxxxx \
+  --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=webserverXX}]"
+
+# CRIA EC2 webserver01 Amazon Linux 2023 - N.Virginia
+aws ec2 run-instances \
+  --image-id ami-05c13eab67c5d8861 \
+  --instance-type t2.micro \
+  --key-name cw-ssh-key \
+  --security-group-ids sg-05fa09a8c6732b241 \
+  --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=webserver01}]" \
+  | grep -i InstanceId > webserver01-id.txt
+
+# EXIBE INSTANCIAS EC2
+
+# FULL INFORMATION EC2
+aws ec2 describe-instances
+
+# FULL INFORMATION EC2 POR REGIÃO
+aws ec2 describe-instances --region us-east-1
+
+# EXIBE NOME HOST DAS EC2
+aws ec2 describe-instances --query "Reservations[*].Instances[*].Tags[?Key=='Name'].Value" --output text
+
+# EXIBE NOME S3
+aws s3 ls
+
+# FERRAMENTA STRESS TEST
+sudo yum install stress -y
+
+# ESTRESSA 2 CPUs POR 5 MINUTOS
+stress -c 2 -t 300
+
+# GRAFANA
+lucianodavid@grafana.net
+Etelvino25*
+
+=========================================================================================================
+
+PYTHON
+======
+
+# Instalação virtualenv
+pip install virtualenv
+
+pip freeze
+
