@@ -1,5 +1,7 @@
 ALTERACAO BRANCH FEAT1
 
+COMPANHEIRO ALTERANDO...
+
 aws_set_credentials.sh
 ======================
 #!/bin/bash
