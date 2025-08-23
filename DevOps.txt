@@ -170,6 +170,39 @@ terraform {
 User: lodavid25
 Pass: AnoNovo25#
 
+Token
+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
+
+git init
+Token
+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
+
+git status
+git add
+git commit -m "..."
+git log
+
+git config --global user.name "nome"
+git config --global user.email "email@dominio"
+git config --list
+
+git diff
+
+git remote add origin <repositorio>
+git remote -v
+git branch -m main
+git push -u origin main
+
+git clone https://github.com/lodavid25/lodavid.git
+
+git branch
+git checkout -b feat1
+git checkout <branch>
+
+git pull
+git merge
+git rebase main
+
 <home_dir>/.git/objects
 ls .git/objects/<meio>
 git cat-file -p 
