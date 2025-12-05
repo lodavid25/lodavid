@@ -14,4 +14,7 @@ jobs:
 
       - name: Run
         run: |
+          ls -l
+          pwd
+          ls -l
           
