@@ -9,7 +9,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Git Clone
         uses: actions/checkout@v3
 
       - name: Run
@@ -18,6 +18,9 @@ jobs:
           pwd
           ls -l
           cd exemplo
+          pwd
+          ls -l
+          cd ..
           pwd
           ls -l
           
