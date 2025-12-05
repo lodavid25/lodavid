@@ -17,4 +17,6 @@ jobs:
           ls -l
           pwd
           ls -l
+          cd /exemplo
+          ls -l
           
